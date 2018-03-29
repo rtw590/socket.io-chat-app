@@ -1,16 +1,16 @@
 const mongo = require('mongodb').MongoClient;
 const client = require('socket.io').listen(4000).sockets;
 
-// Connect to MongoDB
-mongo.connect('mongodb://localhost/mongochat', function(err, db) {
+// Connect to mongo
+mongo.connect('mongodb://127.0.0.1/mongochat', function(err, db){
     if(err){
         throw err;
     }
 
-    console.log('Mongodb Connected...');
+    console.log('MongoDB connected...');
 
-    // Connect to
-    client.on('connection', function(){
+    // Connect to Socket.io
+    client.on('connection', function(socket){
         let chat = db.collection('chats');
 
         // Create function to send status
@@ -24,7 +24,7 @@ mongo.connect('mongodb://localhost/mongochat', function(err, db) {
                 throw err;
             }
 
-            //Emit the messages
+            // Emit the messages
             socket.emit('output', res);
         });
 
@@ -38,16 +38,16 @@ mongo.connect('mongodb://localhost/mongochat', function(err, db) {
                 // Send error status
                 sendStatus('Please enter a name and message');
             } else {
-                // Insert message to db
-                chat.insert({name: name, message: message, function(){
+                // Insert message
+                chat.insert({name: name, message: message}, function(){
                     client.emit('output', [data]);
 
-                    // Send status Object
+                    // Send status object
                     sendStatus({
                         message: 'Message sent',
                         clear: true
                     });
-                }});
+                });
             }
         });
 
@@ -55,7 +55,7 @@ mongo.connect('mongodb://localhost/mongochat', function(err, db) {
         socket.on('clear', function(data){
             // Remove all chats from collection
             chat.remove({}, function(){
-                //Emit cleared
+                // Emit cleared
                 socket.emit('cleared');
             });
         });
